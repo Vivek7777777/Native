@@ -1,39 +1,87 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import 'react-native-gesture-handler';
+import { Drawer } from 'expo-router/drawer';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Ionicons } from '@expo/vector-icons';
+import { useCallback } from 'react';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+
+  const queryClient = new QueryClient();
+
+  // Load any resources or data needed for the app
+  const [fontsLoaded, fontError] = useFonts({
+    // Add custom fonts here if needed
   });
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded || fontError) {
+      await SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [fontsLoaded, fontError]);
 
-  if (!loaded) {
+  if (!fontsLoaded && !fontError) {
     return null;
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    
+    <QueryClientProvider client={queryClient}>
+
+    <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <Drawer
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: '#f4511e',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+          drawerActiveTintColor: '#f4511e',
+          drawerLabelStyle: {
+            fontSize: 16,
+          },
+        }}
+      >
+        <Drawer.Screen
+          name="(home)/index"
+          options={{
+            drawerLabel: 'Home', // Set a user-friendly label
+            title: 'My Home', // Set the title for the header
+            drawerIcon: ({ color }: any) => (
+              <Ionicons name="home" size={22} color={color} />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="profile"
+          options={{
+            drawerLabel: 'Profile',
+            title: 'My Profile',
+            drawerIcon: ({ color }: any) => (
+              <Ionicons name="person" size={22} color={color} />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="setting"
+          options={{
+            drawerLabel: 'Settings',
+            title: 'Settings',
+            drawerIcon: ({ color }: any) => (
+              <Ionicons name="settings" size={22} color={color} />
+            ),
+          }}
+        />
+      </Drawer>
+    </GestureHandlerRootView>
+    </QueryClientProvider>
+
   );
 }
