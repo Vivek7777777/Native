@@ -21,6 +21,8 @@ import Table from '@/components/custom/Table';
 import Entypo from '@expo/vector-icons/Entypo';
 import { AntDesign } from '@expo/vector-icons';
 import { useConfirmationAlert } from '@/hooks/useConfirmationAlert';
+import AddButton from '@/components/custom/AddButton';
+import { useRouter } from 'expo-router';
 
 const sampleTransactions: Transaction[] = [
   {
@@ -45,6 +47,7 @@ export default function HomeScreen() {
   const limit = 20;
   const [refreshing, setRefreshing] = React.useState(false);
   const { confirmationAlert } = useConfirmationAlert();
+  const router = useRouter();
 
   const {
     data: transaction,
@@ -165,10 +168,10 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
-    // contentContainerStyle={styles.container}
-    // refreshControl={
-    //   <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-    // }
+      contentContainerStyle={styles.container}
+      // refreshControl={
+      //   <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      // }
     >
       <Pressable onPress={upload} style={styles.uploadButton}>
         <Text style={styles.uploadButtonText}>Import</Text>
@@ -176,6 +179,7 @@ export default function HomeScreen() {
 
       <Text style={styles.title}>Transaction</Text>
       <Table rows={sampleTransactions} columns={cols} />
+      <AddButton onPress={() => router.push('/home/TransactionForm')} />
     </ScrollView>
   );
 }

@@ -1,4 +1,3 @@
-import { Pagination } from '@/types';
 import { apiClient } from '..';
 import { ReactNode } from 'react';
 
