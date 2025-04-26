@@ -1,21 +1,25 @@
-import { Pagination } from "@/types";
-import { apiClient } from "..";
+import { Pagination } from '@/types';
+import { apiClient } from '..';
+import { ReactNode } from 'react';
 
 export type Transaction = {
   name: string;
   address: string;
   amount: number;
   date: string;
-  count: number
+  count: number;
   description: string;
   amount2: number;
+  action?: ReactNode;
 };
 
-
 export const transactionService = {
-  getTransactions: async (page: number, limit: number): Promise<Pagination<Transaction>> => {
+  getTransactions: async (
+    page: number,
+    limit: number,
+  ): Promise<Pagination<Transaction>> => {
     const { data } = await apiClient.get('/transaction', {
-      params: { page, limit }
+      params: { page, limit },
     });
     return data;
   },
@@ -23,13 +27,11 @@ export const transactionService = {
   uploadTransaction: async (transaction: any): Promise<Transaction> => {
     const formData = new FormData();
     formData.append('file', transaction.file);
-    const { data } = await apiClient.post('/transaction/upload', formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        }
-      }
-    );
+    const { data } = await apiClient.post('/transaction/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return data;
   },
 };

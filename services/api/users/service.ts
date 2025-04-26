@@ -1,4 +1,4 @@
-import { apiClient } from "..";
+import { apiClient } from '..';
 
 type User = {
   id: string;

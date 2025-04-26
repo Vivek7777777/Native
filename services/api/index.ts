@@ -3,9 +3,7 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 
 const BASE_URL = Platform.select({
-  // ios: 'http://localhost:3000',
-  // android: 'http://10.0.2.2:3000',
-  default: 'http://192.168.82.151:5000/api',
+  default: 'http://0.0.0.0:5000/api',
 });
 
 export const apiClient = axios.create({

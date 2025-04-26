@@ -17,22 +17,34 @@ import {
 import * as DocumentPicker from 'expo-document-picker';
 import { Transaction } from '@/services/api/transaction/service';
 import { apiClient } from '@/services/api';
+import Table from '@/components/custom/Table';
+import Entypo from '@expo/vector-icons/Entypo';
+import { AntDesign } from '@expo/vector-icons';
+import { useConfirmationAlert } from '@/hooks/useConfirmationAlert';
+
+const sampleTransactions: Transaction[] = [
+  {
+    name: 'Delta Airlines',
+    address: '1030 Delta Blvd, Atlanta, GA',
+    amount: 350.0,
+    date: '2023-05-06',
+    count: 1,
+    description: 'Flight to Miami lorem ipsum dolor sit amet lorem ipsum dolor',
+    amount2: 350.0,
+    action: <Text>Action</Text>,
+  },
+];
+
+const handleEdit = (item: Transaction) => {
+  Alert.alert('Edit', `Editing ${item.name}`);
+};
 
 export default function HomeScreen() {
   const [transactions, setTransactions] = React.useState<Transaction[]>([]);
   const [page, setPage] = React.useState(1);
-  const limit = 10;
+  const limit = 20;
   const [refreshing, setRefreshing] = React.useState(false);
-
-  const cols: { key: keyof Transaction; label: string; width: number }[] = [
-    { key: 'name', label: 'Name', width: 200 },
-    { key: 'address', label: 'Address', width: 200 },
-    { key: 'amount', label: 'Amount', width: 100 },
-    { key: 'date', label: 'Date', width: 120 },
-    { key: 'count', label: 'Count', width: 80 },
-    { key: 'description', label: 'Description', width: 200 },
-    { key: 'amount2', label: 'Amount 2', width: 100 },
-  ];
+  const { confirmationAlert } = useConfirmationAlert();
 
   const {
     data: transaction,
@@ -41,14 +53,6 @@ export default function HomeScreen() {
     refetch: refetchTransaction,
   } = useGetTransactions(page, limit);
   const { mutate: uploadTransaction } = useUploadTransaction();
-
-  const handleNextPage = () => {
-    if (transaction?.hasNextPage) setPage((prev) => prev + 1);
-  };
-
-  const handlePreviousPage = () => {
-    if (transaction?.hasPreviousPage) setPage((prev) => prev - 1);
-  };
 
   const upload = async () => {
     try {
@@ -88,33 +92,56 @@ export default function HomeScreen() {
     }
   };
 
-  const renderItem = ({ item }: { item: Transaction }) => (
-    <View style={styles.row}>
-      {cols.map((col) => (
-        <Text
-          key={col.key}
-          style={[styles.cell, { width: col.width }]}
-          numberOfLines={1}
-        >
-          {item[col.key]}
-        </Text>
-      ))}
-    </View>
-  );
-
-  const handleLoadMore = () => {
-    if (transaction?.hasNextPage && !isFetching) {
-      setPage((prev) => prev + 1);
-    }
+  const handleDelete = (name: string) => {
+    confirmationAlert({
+      title: 'Confirm Delete',
+      message: 'Are you sure you want to delete this transaction?',
+      confirmText: 'Delete',
+      onConfirm: () => {
+        console.log('Deleting transaction with ID:', name);
+      },
+    });
   };
 
-  const renderSkeleton = () => (
-    <View style={styles.skeletonCell}>
-      {cols.map((_, index) => (
-        <View key={index} style={styles.skeletonCell} />
-      ))}
-    </View>
-  );
+  const cols: Column<Transaction>[] = [
+    { key: 'name', label: 'Name', width: 200 },
+    { key: 'address', label: 'Address', width: 200 },
+    { key: 'amount', label: 'Amount', width: 100 },
+    { key: 'date', label: 'Date', width: 120 },
+    { key: 'count', label: 'Count', width: 80 },
+    { key: 'description', label: 'Description', width: 200 },
+    { key: 'amount2', label: 'Amount 2', width: 100 },
+    {
+      key: 'action',
+      label: 'Action',
+      width: 100,
+      renderCell: (item) => (
+        <View style={styles.actionContainer}>
+          <TouchableOpacity
+            onPress={() => handleEdit(item)}
+            style={[styles.actionButton]}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Entypo name="edit" size={24} color="green" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => handleDelete(item.name)}
+            style={[styles.actionButton]}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <AntDesign name="delete" size={24} color="red" />
+          </TouchableOpacity>
+        </View>
+      ),
+    },
+  ];
+
+  // const handleLoadMore = () => {
+  //   if (transaction?.hasNextPage && !isFetching) {
+  //     setPage((prev) => prev + 1);
+  //   }
+  // };
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -134,78 +161,41 @@ export default function HomeScreen() {
     }
   }, [transaction]);
 
+  console.log('page', page, limit, typeof sampleTransactions[0].action);
+
   return (
     <ScrollView
-      contentContainerStyle={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
+    // contentContainerStyle={styles.container}
+    // refreshControl={
+    //   <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+    // }
     >
       <Pressable onPress={upload} style={styles.uploadButton}>
         <Text style={styles.uploadButtonText}>Import</Text>
       </Pressable>
 
       <Text style={styles.title}>Transaction</Text>
-
-      <ScrollView horizontal>
-        <View>
-          <View style={styles.tableHeader}>
-            {cols.map((col) => (
-              <Text
-                key={col.key}
-                style={[styles.headerCell, { width: col.width }]}
-              >
-                {col.label}
-              </Text>
-            ))}
-          </View>
-
-          {isLoading && page === 1 ? (
-            <>
-              {Array.from({ length: 10 }).map((_, index) => (
-                <React.Fragment key={index}>{renderSkeleton()}</React.Fragment>
-              ))}
-            </>
-          ) : (
-            <FlatList
-              data={transactions}
-              renderItem={renderItem}
-              keyExtractor={(_, index) => index.toString()}
-              onEndReachedThreshold={0.9}
-              onEndReached={() => {
-                if (transaction?.hasNextPage && !isFetching) {
-                  setPage((prev) => prev + 1);
-                }
-              }}
-              ListFooterComponent={
-                isFetching ? (
-                  <>
-                    {Array.from({ length: 10 }).map((_, index) => (
-                      <React.Fragment key={index}>
-                        {renderSkeleton()}
-                      </React.Fragment>
-                    ))}
-                  </>
-                ) : null
-              }
-              ListEmptyComponent={
-                !isLoading && !isFetching ? (
-                  <Text style={styles.emptyText}>No transactions found.</Text>
-                ) : null
-              }
-              nestedScrollEnabled
-            />
-          )}
-        </View>
-      </ScrollView>
+      <Table rows={sampleTransactions} columns={cols} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  actionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  actionButton: {
+    margin: 0,
+  },
+  actionText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+  },
   container: {
     flexGrow: 1,
-    padding: 10,
     backgroundColor: '#f2f2f2',
   },
   uploadButton: {
@@ -213,7 +203,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a7ea4',
     borderRadius: 5,
     alignItems: 'center',
-    marginBottom: 10,
+    margin: 10,
     width: 100,
     alignSelf: 'flex-end',
   },
@@ -230,16 +220,19 @@ const styles = StyleSheet.create({
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#ddd',
+    backgroundColor: 'red',
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#aaa',
+    margin: 20,
   },
   headerCell: {
     minWidth: 120,
     fontWeight: 'bold',
     textAlign: 'center',
     paddingHorizontal: 5,
+    borderBottomWidth: 2,
+    borderColor: 'black',
   },
   row: {
     flexDirection: 'row',
