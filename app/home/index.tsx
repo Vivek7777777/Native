@@ -24,30 +24,35 @@ import { useConfirmationAlert } from '@/hooks/useConfirmationAlert';
 import AddButton from '@/components/custom/AddButton';
 import { useRouter } from 'expo-router';
 
-const sampleTransactions: Transaction[] = [
-  {
-    name: 'Delta Airlines',
-    address: '1030 Delta Blvd, Atlanta, GA',
-    amount: 350.0,
-    date: '2023-05-06',
-    count: 1,
-    description: 'Flight to Miami lorem ipsum dolor sit amet lorem ipsum dolor',
-    amount2: 350.0,
-    action: <Text>Action</Text>,
-  },
-];
-
-const handleEdit = (item: Transaction) => {
-  Alert.alert('Edit', `Editing ${item.name}`);
-};
+// const sampleTransactions: Transaction[] = [
+//   {
+//     name: 'Delta Airlines',
+//     address: '1030 Delta Blvd, Atlanta, GA',
+//     amount: 350.0,
+//     date: '2023-05-06',
+//     count: 1,
+//     description: 'Flight to Miami lorem ipsum dolor sit amet lorem ipsum dolor',
+//     amount2: 350.0,
+//   },
+//   {
+//     name: 'Delta Airlines',
+//     address: '1030 Delta Blvd, Atlanta, GA',
+//     amount: 350.0,
+//     date: '2023-05-06',
+//     count: 1,
+//     description: 'Flight to Miami lorem ipsum dolor sit amet lorem ipsum dolor',
+//     amount2: 350.0,
+//   },
+// ];
 
 export default function HomeScreen() {
   const [transactions, setTransactions] = React.useState<Transaction[]>([]);
   const [page, setPage] = React.useState(1);
   const limit = 20;
   const [refreshing, setRefreshing] = React.useState(false);
-  const { confirmationAlert } = useConfirmationAlert();
+
   const router = useRouter();
+  const { confirmationAlert } = useConfirmationAlert();
 
   const {
     data: transaction,
@@ -93,6 +98,20 @@ export default function HomeScreen() {
       console.error('Error uploading transaction:', error);
       Alert.alert('Error', 'Failed to upload the file.');
     }
+  };
+
+  const handleEdit = (item: Transaction) => {
+    router.push({
+      pathname: '/home/TransactionForm',
+      params: {
+        name: item.name,
+        address: item.address,
+        amount: item.amount,
+        date: item.date,
+        count: item.count,
+        description: item.description,
+      },
+    });
   };
 
   const handleDelete = (name: string) => {
@@ -164,7 +183,7 @@ export default function HomeScreen() {
     }
   }, [transaction]);
 
-  console.log('page', page, limit, typeof sampleTransactions[0].action);
+  // console.log('page', page, limit, typeof sampleTransactions[0].action);
 
   return (
     <ScrollView
@@ -177,8 +196,7 @@ export default function HomeScreen() {
         <Text style={styles.uploadButtonText}>Import</Text>
       </Pressable>
 
-      <Text style={styles.title}>Transaction</Text>
-      <Table rows={sampleTransactions} columns={cols} />
+      <Table rows={transactions} columns={cols} />
       <AddButton onPress={() => router.push('/home/TransactionForm')} />
     </ScrollView>
   );
@@ -205,7 +223,7 @@ const styles = StyleSheet.create({
   uploadButton: {
     padding: 10,
     backgroundColor: '#0a7ea4',
-    borderRadius: 5,
+    borderRadius: 25,
     alignItems: 'center',
     margin: 10,
     width: 100,
@@ -213,7 +231,6 @@ const styles = StyleSheet.create({
   },
   uploadButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
     fontSize: 16,
   },
   title: {

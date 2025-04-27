@@ -1,42 +1,52 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, FlatList } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  FlatList,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
 
 interface DataTableProps<T> {
   columns: Column<T>[];
   rows: T[];
-  headerStyle?: object;
-  cellStyle?: object;
-  containerStyle?: object;
+  isLoading?: boolean;
+  headerStyle?: StyleProp<ViewStyle>;
+  cellStyle?: StyleProp<ViewStyle>;
+  containerStyle?: StyleProp<ViewStyle>;
   keyExtractor?: (item: T, index: number) => string;
+  skeletonNumber?: number;
 }
 
 const Table = <T extends object>({
   columns,
   rows,
+  isLoading = false,
   headerStyle = {},
   cellStyle = {},
   containerStyle = {},
   keyExtractor = (_, index) => index.toString(),
+  skeletonNumber = 10,
 }: DataTableProps<T>) => {
   const totalWidth = columns.reduce((sum, col) => sum + col.width, 0);
 
-  const renderRow = ({ item }: { item: T }) => (
-    <View style={styles.dataRow}>
-      {columns.map((col) => (
-        <View
-          key={String(col.key)}
-          style={[styles.dataCell, { width: col.width }, cellStyle]}
-        >
-          {col.renderCell ? (
-            col.renderCell(item)
-          ) : (
-            <Text style={styles.cellText} numberOfLines={1}>
-              {String(item[col.key])}
-            </Text>
-          )}
+  const SkeletonLoader = () => (
+    <>
+      {Array.from({ length: skeletonNumber }).map((_, idx) => (
+        <View key={idx} style={styles.dataRow}>
+          {columns.map((col, index) => (
+            <View
+              key={index}
+              style={[styles.dataCell, { width: col.width }, cellStyle]}
+            >
+              <View style={styles.skeletonBox} />
+            </View>
+          ))}
         </View>
       ))}
-    </View>
+    </>
   );
 
   return (
@@ -47,25 +57,53 @@ const Table = <T extends object>({
         contentContainerStyle={{ width: totalWidth }}
       >
         <View>
-          <View style={[styles.headerRow, headerStyle]}>
-            {columns.map((col) => (
-              <View
-                key={String(col.key)}
-                style={[styles.headerCell, { width: col.width }]}
-              >
-                <Text style={styles.headerText}>{col.label}</Text>
-              </View>
-            ))}
-          </View>
           <FlatList
             data={rows}
-            renderItem={renderRow}
             keyExtractor={keyExtractor}
+            ListHeaderComponent={
+              <View style={[styles.headerRow, headerStyle]}>
+                {columns.map((col) => (
+                  <View
+                    key={String(col.key)}
+                    style={[styles.headerCell, { width: col.width }]}
+                  >
+                    <Text style={styles.headerText}>{col.label}</Text>
+                  </View>
+                ))}
+              </View>
+            }
+            renderItem={({ item }) => (
+              <View style={styles.dataRow}>
+                {columns.map((col) => (
+                  <View
+                    key={String(col.key)}
+                    style={[styles.dataCell, { width: col.width }, cellStyle]}
+                  >
+                    {col.renderCell ? (
+                      col.renderCell(item)
+                    ) : (
+                      <Text style={styles.cellText} numberOfLines={1}>
+                        {String(item[col.key])}
+                      </Text>
+                    )}
+                  </View>
+                ))}
+              </View>
+            )}
             ListEmptyComponent={
               <View style={[styles.emptyContainer, { width: totalWidth }]}>
                 <Text style={styles.emptyText}>No data available</Text>
               </View>
             }
+            ItemSeparatorComponent={() => (
+              <View
+                style={{
+                  height: 1,
+                  backgroundColor: '#eee',
+                }}
+              />
+            )}
+            ListFooterComponent={isLoading ? <SkeletonLoader /> : null}
           />
         </View>
       </ScrollView>
@@ -113,6 +151,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#888',
+  },
+  skeletonBox: {
+    height: 14,
+    backgroundColor: '#ddd',
+    borderRadius: 4,
+    width: '100%',
   },
 });
 

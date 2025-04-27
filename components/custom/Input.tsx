@@ -12,12 +12,24 @@ interface InputProps extends TextInputProps {
   error?: string;
 }
 
-const Input: React.FC<InputProps> = ({ label, error, ...props }) => {
+const Input: React.FC<InputProps> = ({
+  label,
+  error,
+  multiline = false,
+  style,
+  ...props
+}) => {
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
-        style={[styles.input, error && styles.errorInput]}
+        style={[
+          styles.input,
+          multiline && styles.multilineInput,
+          error && styles.errorInput,
+          style,
+        ]}
+        multiline={multiline}
         {...props}
       />
       {error && <Text style={styles.errorText}>{error}</Text>}
@@ -35,11 +47,16 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   input: {
+    height: 50,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 50,
-    padding: 10,
+    borderRadius: 25,
+    paddingHorizontal: 15,
     fontSize: 16,
+  },
+  multilineInput: {
+    height: 'auto',
+    textAlignVertical: 'top',
   },
   errorInput: {
     borderColor: 'red',
