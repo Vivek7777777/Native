@@ -48,7 +48,7 @@ import { useRouter } from 'expo-router';
 export default function HomeScreen() {
   const [transactions, setTransactions] = React.useState<Transaction[]>([]);
   const [page, setPage] = React.useState(1);
-  const limit = 20;
+  const limit = 50;
   const [refreshing, setRefreshing] = React.useState(false);
 
   const router = useRouter();
@@ -58,6 +58,7 @@ export default function HomeScreen() {
     data: transaction,
     isLoading,
     isFetching,
+    error,
     refetch: refetchTransaction,
   } = useGetTransactions(page, limit);
   const { mutate: uploadTransaction } = useUploadTransaction();
@@ -159,11 +160,11 @@ export default function HomeScreen() {
     },
   ];
 
-  // const handleLoadMore = () => {
-  //   if (transaction?.hasNextPage && !isFetching) {
-  //     setPage((prev) => prev + 1);
-  //   }
-  // };
+  const handleLoadMore = () => {
+    if (transaction?.hasNextPage && !isFetching) {
+      setPage(page + 1);
+    }
+  };
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -183,22 +184,25 @@ export default function HomeScreen() {
     }
   }, [transaction]);
 
-  // console.log('page', page, limit, typeof sampleTransactions[0].action);
+  console.log('page', page, limit, isLoading, error);
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      // refreshControl={
-      //   <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      // }
-    >
+    <>
       <Pressable onPress={upload} style={styles.uploadButton}>
         <Text style={styles.uploadButtonText}>Import</Text>
       </Pressable>
 
-      <Table rows={transactions} columns={cols} />
+      <Table
+        rows={transactions}
+        columns={cols}
+        isLoading={isLoading}
+        skeletonNumber={10}
+        onEndReached={handleLoadMore}
+        horizontalScrollEnabled={false}
+        hasNextPage={transaction?.hasNextPage}
+      />
       <AddButton onPress={() => router.push('/home/TransactionForm')} />
-    </ScrollView>
+    </>
   );
 }
 

@@ -18,6 +18,9 @@ interface DataTableProps<T> {
   containerStyle?: StyleProp<ViewStyle>;
   keyExtractor?: (item: T, index: number) => string;
   skeletonNumber?: number;
+  horizontalScrollEnabled?: boolean;
+  onEndReached?: () => void;
+  hasNextPage?: boolean;
 }
 
 const Table = <T extends object>({
@@ -29,6 +32,9 @@ const Table = <T extends object>({
   containerStyle = {},
   keyExtractor = (_, index) => index.toString(),
   skeletonNumber = 10,
+  horizontalScrollEnabled = true,
+  onEndReached = () => {},
+  hasNextPage = true,
 }: DataTableProps<T>) => {
   const totalWidth = columns.reduce((sum, col) => sum + col.width, 0);
 
@@ -50,66 +56,56 @@ const Table = <T extends object>({
   );
 
   return (
-    <View style={[styles.container, containerStyle]}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={true}
-        contentContainerStyle={{ width: totalWidth }}
-      >
-        <View>
-          <FlatList
-            data={rows}
-            keyExtractor={keyExtractor}
-            ListHeaderComponent={
-              <View style={[styles.headerRow, headerStyle]}>
-                {columns.map((col) => (
-                  <View
-                    key={String(col.key)}
-                    style={[styles.headerCell, { width: col.width }]}
-                  >
-                    <Text style={styles.headerText}>{col.label}</Text>
-                  </View>
-                ))}
-              </View>
-            }
-            renderItem={({ item }) => (
-              <View style={styles.dataRow}>
-                {columns.map((col) => (
-                  <View
-                    key={String(col.key)}
-                    style={[styles.dataCell, { width: col.width }, cellStyle]}
-                  >
-                    {col.renderCell ? (
-                      col.renderCell(item)
-                    ) : (
-                      <Text style={styles.cellText} numberOfLines={1}>
-                        {String(item[col.key])}
-                      </Text>
-                    )}
-                  </View>
-                ))}
-              </View>
-            )}
-            ListEmptyComponent={
-              <View style={[styles.emptyContainer, { width: totalWidth }]}>
-                <Text style={styles.emptyText}>No data available</Text>
-              </View>
-            }
-            ItemSeparatorComponent={() => (
+    <ScrollView style={[styles.container, containerStyle]} horizontal>
+      <FlatList
+        data={rows}
+        keyExtractor={keyExtractor}
+        ListHeaderComponent={
+          <View style={[styles.headerRow, headerStyle]}>
+            {columns.map((col) => (
               <View
-                style={{
-                  height: 1,
-                  backgroundColor: '#eee',
-                }}
-              />
-            )}
-            ListFooterComponent={isLoading ? <SkeletonLoader /> : null}
-          />
-        </View>
-      </ScrollView>
-    </View>
+                key={String(col.key)}
+                style={[styles.headerCell, { width: col.width }]}
+              >
+                <Text style={styles.headerText}>{col.label}</Text>
+              </View>
+            ))}
+          </View>
+        }
+        renderItem={({ item }) => (
+          <View style={styles.dataRow}>
+            {columns.map((col) => (
+              <View
+                key={String(col.key)}
+                style={[styles.dataCell, { width: col.width }, cellStyle]}
+              >
+                {col.renderCell ? (
+                  col.renderCell(item)
+                ) : (
+                  <Text style={styles.cellText} numberOfLines={1}>
+                    {String(item[col.key as keyof typeof item])}
+                  </Text>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+        ListEmptyComponent={
+          isLoading ? null : (
+            <View style={[styles.emptyContainer, { width: totalWidth }]}>
+              <Text style={styles.emptyText}>No data available</Text>
+            </View>
+          )
+        }
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ListFooterComponent={hasNextPage ? <SkeletonLoader /> : null}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.5}
+      />
+    </ScrollView>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -133,8 +129,6 @@ const styles = StyleSheet.create({
   dataRow: {
     flexDirection: 'row',
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   dataCell: {
     paddingHorizontal: 8,
@@ -157,6 +151,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#ddd',
     borderRadius: 4,
     width: '100%',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#eee',
   },
 });
 
