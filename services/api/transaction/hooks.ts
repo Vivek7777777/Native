@@ -1,13 +1,11 @@
-import { useQuery, useMutation, QueryClient } from '@tanstack/react-query';
-import { transactionService } from './service';
-import { queryKeys } from '../queryKeys';
-
-const queryClient = new QueryClient();
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Transaction, transactionService } from './service';
+import queryClient from '../queryClient';
 
 export const useGetTransactions = (page: number, limit: number) => {
   return useQuery({
-    queryKey: [queryKeys.transaction.pagination, page, limit], // Include page and limit in the query key
     queryFn: () => transactionService.getTransactions(page, limit), // Pass a function that returns a Promise
+    queryKey: ['transaction', page, limit], // Include page and limit in the query key
   });
 };
 
@@ -16,7 +14,24 @@ export const useUploadTransaction = () => {
     mutationFn: transactionService.uploadTransaction,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.transaction.uploadTransaction,
+        queryKey: ['transaction'],
+      });
+    },
+  });
+};
+
+export const useUpdateTransaction = () => {
+  return useMutation({
+    mutationFn: ({
+      id,
+      transaction,
+    }: {
+      id: string;
+      transaction: Partial<Transaction>;
+    }) => transactionService.updateTransaction(id, transaction),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['transaction'],
       });
     },
   });

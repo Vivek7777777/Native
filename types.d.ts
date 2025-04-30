@@ -1,3 +1,9 @@
+interface BaseSchema {
+  _id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 type Pagination<T> = {
   docs: T[];
   totalDocs: number;

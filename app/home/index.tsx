@@ -105,6 +105,7 @@ export default function HomeScreen() {
     router.push({
       pathname: '/home/TransactionForm',
       params: {
+        _id: (item as any)?._id,
         name: item.name,
         address: item.address,
         amount: item.amount,

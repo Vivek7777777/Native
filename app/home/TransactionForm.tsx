@@ -14,10 +14,11 @@ import SubmitButton from '@/components/custom/SubmitButton';
 import Input from '@/components/custom/Input';
 import { transactionSchema } from '@/services/yup';
 import { Transaction } from '@/services/api/transaction/service';
+import { useUpdateTransaction } from '@/services/api/transaction/hooks';
 
 export default function TransactionForm() {
   const params = useLocalSearchParams() as
-    | Partial<Transaction>
+    | (Partial<Transaction> & { _id?: string })
     | undefined
     | null;
 
@@ -37,8 +38,26 @@ export default function TransactionForm() {
     resolver: yupResolver(transactionSchema),
   });
 
-  const handleFormSubmit = (data: Partial<Transaction>) => {
-    Alert.alert('Success', 'Transaction saved successfully!');
+  const { mutateAsync: updateTransaction, isPending } = useUpdateTransaction();
+
+  const handleFormSubmit = async (data: Partial<Transaction>) => {
+    try {
+      console.log({
+        id: params?._id!,
+        transaction: data,
+      });
+
+      const transaction = await updateTransaction({
+        id: params?._id!,
+        transaction: data,
+      });
+      console.log('transaction', transaction);
+
+      Alert.alert('Success', 'save transaction!');
+    } catch (err) {
+      console.log(err);
+      Alert.alert('Error', 'Failed to save transaction!');
+    }
   };
 
   return (

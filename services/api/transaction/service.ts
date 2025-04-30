@@ -33,4 +33,12 @@ export const transactionService = {
     });
     return data;
   },
+
+  updateTransaction: async (
+    id: string,
+    transaction: Partial<Transaction>,
+  ): Promise<Transaction> => {
+    const { data } = await apiClient.post(`/transaction/${id}`, transaction);
+    return data;
+  },
 };
